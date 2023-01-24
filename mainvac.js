@@ -1,0 +1,316 @@
+﻿var Podeda;
+(function (Podeda) {
+    var Pages;
+    (function (Pages) {
+        var Main = /** @class */ (function () {
+            function Main() {
+                this.newItem = null;
+                this.tasks = ko.observableArray();
+                this.city=ko.observableArray();
+                this.cityOpt=ko.observableArray();
+                this.executors = ko.observableArray();
+                this.vacancies = ko.observableArray();
+                this.init = this.init.bind(this);
+                this.getTasks = this.getTasks.bind(this);
+                this.getExecutors = this.getExecutors.bind(this);
+                this.getVacancies = this.getVacancies.bind(this);
+                this.getVacanciesFilter = this.getVacanciesFilter.bind(this);
+                this.getTasksSuccessCallback = this.getTasksSuccessCallback.bind(this);
+                this.getExecutorsSuccessCallback = this.getExecutorsSuccessCallback.bind(this);
+                this.getVacanciesSuccessCallback = this.getVacanciesSuccessCallback.bind(this);
+                 this.getVacanciesFilterSuccessCallback = this.getVacanciesFilterSuccessCallback.bind(this);
+                this.onFailure = this.onFailure.bind(this);
+                this.newTask=this.newTask.bind(this);
+
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', this.init);
+            }
+            Main.prototype.init = function () {
+
+               this.getVacancies();
+               $('#city').on('change',function(e){
+               $.model.getVacanciesFilter($(e.target).val());
+               })
+           	
+
+            };
+            
+           Main.prototype.newTask=function(id){
+          
+           var options = {
+		    url: 'http://portal.pallet.ru/requests/Lists/vacancies/DispForm.aspx?ID='+id,
+		    title: 'О вакансии',
+		    allowMaximize: false,
+		    showClose: true,
+		    width: 800,
+		    height: 750,
+		    dialogReturnValueCallback: function(result){
+		        if (result == SP.UI.DialogResult.OK) {
+		            window.location.reload();
+		        }
+		        if (result == SP.UI.DialogResult.cancel) {
+		            console.log('Cancel');
+		        }
+		    }
+
+  };    
+   SP.SOD.execute('sp.ui.dialog.js', 'SP.UI.ModalDialog.showModalDialog', options);
+
+
+           }
+Main.prototype.isUserInGroup = function (groupName) {
+
+var userIsInGroup = false;
+                    $.ajax({
+                        async: false,
+                        headers: { "accept": "application/json; odata=verbose" },
+                        method: "GET",
+                        url: _spPageContextInfo.webAbsoluteUrl + "/_api/web/currentuser/groups",
+                        success: function (data) {
+                            data.d.results.forEach(function (value) {
+                                if (value.Title == groupName) {
+                                    userIsInGroup = true;
+                                }
+                            });
+                        },
+                        error: function (response) {
+                            console.log(response.status);
+                        },
+                    });
+                    return userIsInGroup;
+}
+Main.prototype.showBtn = function (groupName) {
+                var isApplicant = this.isUserInGroup("Заказчики Биржа");
+                if (isApplicant ) {             
+                $('.newTask').show();               
+               } else{
+               $('.newTask').hide();
+               }
+
+}
+
+            Main.prototype.getTasks = function () {
+                var self = this;
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                    var clientContext = SP.ClientContext.get_current();
+                    var oList = clientContext.get_web().get_lists().getByTitle('Биржа помощи');
+                    var camlQuery = new SP.CamlQuery();
+                    var camlToChange='';
+                    if(window.location.href.indexOf('allrequests')>-1){
+                    
+                    camlToChange="<View><Query><Where><Eq><FieldRef Name='OgStatus'/><Value Type='Text'>Новая</Value></Eq></Where><OrderBy><FieldRef Name='Created' Ascending='false' /></OrderBy></Query></View>";
+                    } else{
+                    camlToChange="<View><Query><Where><Eq><FieldRef Name='OgStatus'/><Value Type='Text'>Новая</Value></Eq></Where><OrderBy><FieldRef Name='Created' Ascending='false' /></OrderBy></Query><RowLimit>3</RowLimit></View>";
+                    }
+                    camlQuery.set_viewXml(camlToChange);
+                    self.bannersListItems = oList.getItems(camlQuery);
+                    clientContext.load(self.bannersListItems);
+                    clientContext.executeQueryAsync(Function.createDelegate(self, self.getTasksSuccessCallback), Function.createDelegate(self, self.errorCallback));
+                });
+            };
+            Main.prototype.getTasksSuccessCallback = function (sender, args) {
+                var listItemEnumerator = this.bannersListItems.getEnumerator();
+                while (listItemEnumerator.moveNext()) {
+                    var oListItem = listItemEnumerator.get_current();
+                    this.tasks.push(new Task(oListItem));
+                }
+                this.getExecutors();
+            };
+            Main.prototype.errorCallback = function (sender, args) {
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            };
+
+            
+            Main.prototype.getExecutors = function () {
+                var self = this;
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                    var clientContext = SP.ClientContext.get_current();
+                    var oList = clientContext.get_web().get_lists().getByTitle('Исполнители');
+                    var camlQuery = new SP.CamlQuery();
+                    camlQuery.set_viewXml("<View></View>");
+                    self.executorsListItems = oList.getItems(camlQuery);
+                    clientContext.load(self.executorsListItems);
+                    clientContext.executeQueryAsync(Function.createDelegate(self, self.getExecutorsSuccessCallback), Function.createDelegate(self, self.errorExecutorsCallback));
+                });
+            };
+            Main.prototype.getExecutorsSuccessCallback = function (sender, args) {
+                var listItemEnumerator = this.executorsListItems.getEnumerator();
+                while (listItemEnumerator.moveNext()) {
+                    var oListItem = listItemEnumerator.get_current();
+                    this.executors.push(new Executor(oListItem));
+                }
+                    console.log(this.executors());
+            };
+            Main.prototype.errorExecutorsCallback = function (sender, args) {
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            };
+
+
+
+
+            Main.prototype.getVacancies = function () {
+                var self = this;
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                    var clientContext = SP.ClientContext.get_current();
+                    var oList = clientContext.get_web().get_lists().getByTitle('vacancies');
+                    var camlQuery = new SP.CamlQuery();
+                    camlQuery.set_viewXml("<View></View>");
+                    self.executorsListItems = oList.getItems(camlQuery);
+                    clientContext.load(self.executorsListItems);
+                    clientContext.executeQueryAsync(Function.createDelegate(self, self.getVacanciesSuccessCallback), Function.createDelegate(self, self.errorVacanciesCallback));
+                });
+            };
+            Main.prototype.getVacanciesSuccessCallback = function (sender, args) {
+                var listItemEnumerator = this.executorsListItems.getEnumerator();
+                while (listItemEnumerator.moveNext()) {
+                    var oListItem = listItemEnumerator.get_current();
+                    this.vacancies.push(new Vacancy(oListItem));
+                }
+                    console.log(this.vacancies());
+                    for (const element of this.vacancies()) { // You can use `let` instead of `const` if you like
+					    this.city.push(element.City)
+					}
+                    var uniqueNames = [];
+					$.each(this.city(), function(i, el){
+					    if($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
+					});
+					console.log(uniqueNames);
+                    for (const element of uniqueNames) { // You can use `let` instead of `const` if you like
+					    this.cityOpt.push(element)
+					    $('#city').append('<option value="'+element+'">'+element+'</option>');
+
+					}
+
+                    
+            };
+            Main.prototype.errorVacanciesCallback = function (sender, args) {
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            };
+
+
+
+Main.prototype.getVacanciesFilter = function (city) {
+	console.log(city);
+	var camlToChange='';
+	if(city=="Все"){
+	camlToChange="<View></View>";
+	}else{
+	camlToChange="<View><Query><Where><Eq><FieldRef Name='City'/><Value Type='Text'>"+city+"</Value></Eq></Where></Query></View>";
+	}
+				this.vacancies.removeAll();
+                var self = this;
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                    var clientContext = SP.ClientContext.get_current();
+                    var oList = clientContext.get_web().get_lists().getByTitle('vacancies');
+                    var camlQuery = new SP.CamlQuery();
+                    camlQuery.set_viewXml(camlToChange);
+                    self.executorsListItems = oList.getItems(camlQuery);
+                    clientContext.load(self.executorsListItems);
+                    clientContext.executeQueryAsync(Function.createDelegate(self, self.getVacanciesFilterSuccessCallback), Function.createDelegate(self, self.errorVacanciesFilterCallback));
+                });
+            };
+            Main.prototype.getVacanciesFilterSuccessCallback = function (sender, args) {
+                var listItemEnumerator = this.executorsListItems.getEnumerator();
+                while (listItemEnumerator.moveNext()) {
+                    var oListItem = listItemEnumerator.get_current();
+                    this.vacancies.push(new Vacancy(oListItem));
+                }
+                
+                console.log(this.vacancies())
+                   
+                    
+            };
+            Main.prototype.errorVacanciesFilterCallback = function (sender, args) {
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Main.prototype.onFailure = function (sender, args) {
+
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            }
+
+            return Main;
+        }());
+        Pages.Main = Main;
+
+        var Task = /** @class */ (function () {
+            function Task(oListItem) {
+                this.id = oListItem.get_id();
+                this.title = oListItem.get_item('Title');
+                this.HelpExchangeInitiatorUser = oListItem.get_item('HelpExchangeInitiatorUser').get_lookupValue();
+                this.theme = oListItem.get_item('HelpExchangeTheme');
+                this.link = "http://portal.pallet.ru/requests/Lists/HelpExchange/DispForm.aspx?ID="+this.id;
+            }
+            return Task;
+        }());
+        Pages.Task = Task;
+
+        var Executor = /** @class */ (function () {
+            function Executor(oListItem) {
+                this.id = oListItem.get_id();
+                this.HEexecutor = oListItem.get_item('HEexecutor').get_lookupValue();
+                this.ExecutorId = oListItem.get_item('HEexecutor').get_lookupId();
+                
+                this.HEposition = oListItem.get_item('HEposition');
+                this.HEdepartment = oListItem.get_item('HEdepartment');
+                this.link = "http://portal.pallet.ru/requests/SitePages/room.aspx?user="+this.ExecutorId;
+            }
+            console.log(this.Executor);
+            return Executor;
+        }());
+        Pages.Executor = Executor;
+        
+                var Vacancy = /** @class */ (function () {
+                function Vacancy(oListItem) {
+                this.id = oListItem.get_id();                
+                this.Title = oListItem.get_item('Title');
+                this.Address = oListItem.get_item('Address');
+                this.City= oListItem.get_item('City');
+                
+                this.Requirement= oListItem.get_item('Requirement');
+                this.Responsibility= oListItem.get_item('Responsibility');
+                
+                this.SalaryFrom= oListItem.get_item('SalaryFrom');
+                this.SalaryTo= oListItem.get_item('SalaryTo');
+
+                this.Shedule= oListItem.get_item('Shedule');
+                this.Type= oListItem.get_item('Type');
+
+
+
+            }
+            console.log(this.Vacancy);
+            return Vacancy;
+        }());
+        Pages.Vacancy= Vacancy;
+
+        
+        
+    })(Pages = Podeda.Pages || (Podeda.Pages = {}));
+})(Podeda || (Podeda = {}));
+//# sourceMappingURL=main.js.map
+
+
+
+
+
+
+
+
+
+
+

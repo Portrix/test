@@ -1,0 +1,212 @@
+﻿<script src="http://portal.pallet.ru/requests/SiteAssets/dist/helpexchange/jquery-3.6.1.js" ></script>
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/customLibs/bootstrap.min.js"></script>
+
+
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/knockout-3.4.0.js"></script>
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/lodash.min.js"></script>
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/moment.min.js"></script>
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/underscore-min.js"></script>
+<script src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/main.js"></script>
+
+<link rel="stylesheet" href="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/customLibs/custombootstrap.min.css">
+<style>
+.scrollBlk{
+	height:800px;
+	overflow-y:scroll;
+}
+/*
+flip card
+*/
+.card-flip > div {
+  backface-visibility: hidden;
+  transition: transform 300ms;
+  transition-timing-function: linear;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+}
+.card{
+	border-radius:10px;
+	
+	
+}
+.ms-dialog .ms-dlgTitle {
+    padding: 13px 37px 15px !important;
+    }
+
+.card-front {
+  transform: rotateY(0deg);
+  border-radius:10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.container{
+	max-width:1300px !important;
+}
+.card-back {
+  transform: rotateY(180deg);
+  position: absolute;
+  top: 0;
+  border-radius:10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.page-header{
+	margin:0 0 0 40px;
+}
+.card-flip:hover .card-front {
+  transform: rotateY(-180deg);
+}
+  
+.card-flip:hover .card-back {
+  transform: rotateY(0deg);
+}
+#contentBox{
+margin:auto !important;
+}
+.private{
+	    width: 100%;
+    text-align: right;
+    position: relative;
+    top: 10px;
+    right: 10px;
+}
+.newTask{
+	    width: 100%;
+    text-align: left;
+    position: relative;
+    top: 10px;
+    left: 10px;
+}
+
+</style>
+<script type="text/javascript">
+    $(document).ready(function () {
+        console.log('$.model init');
+        $.model = new Podeda.Pages.Main();
+        ko.applyBindings($.model);
+   $('.openD').on('click',function(){
+   openDial();
+   })
+    });
+    function openDial(){
+    
+    var options = {
+		    url: 'http://portal.pallet.ru/requests/SitePages/HEguide.aspx?IsDlg=1',
+		    title: '  ',
+		    allowMaximize: false,
+		    showClose: true,
+		    width: 850,
+		    height: 750,
+		    dialogReturnValueCallback: function(result){
+		        if (result == SP.UI.DialogResult.OK) {
+		            console.log('OK');
+		        }
+		        if (result == SP.UI.DialogResult.cancel) {
+		            console.log('Cancel');
+		        }
+		    }
+
+  };    
+   SP.SOD.execute('sp.ui.dialog.js', 'SP.UI.ModalDialog.showModalDialog', options);
+
+    }
+</script>
+    
+    
+  <section style="background-color: #eee;">
+  <div style="width:100%;display:flex;justify-content:space-between;">
+    <div class="newTask">
+  <div style="color:white !important; cursor:pointer" class="btn btn-secondary" data-bind="click: $data.newTask">Создать заявку</div>
+  <div style="color:white !important; cursor:pointer" class="btn btn-secondary" onclick="window.location.href='http://portal.pallet.ru/requests/SitePages/myrequests.aspx'">Мои заявки</div>
+  </div>
+
+  <div class="private">
+  <a href="http://portal.pallet.ru/requests/SitePages/room.aspx" style="color:white !important" class="btn btn-secondary">Личный кабинет</a>
+  
+  </div>
+  </div>
+  
+  <div class="container py-5">
+    <div class="row">
+      <div class="col">
+        <nav aria-label="breadcrumb" class="bg-light rounded-3 p-3 mb-4">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="http://portal.pallet.ru/modern">OPEN Group</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><a href="#">Биржа Помощи</a></li>
+           </ol>
+        </nav>
+      </div>
+    </div>
+	<div class="infoBlock">
+			<div style="display:flex;align-items:center; ">
+				<div style="width:300px"><img style="width:300px" src="http://portal.pallet.ru/requests/SiteAssets/HelpExchange/surveyDist/hepic.jpg" /></div>
+				<div style="width:956px;margin-left:20px;">
+				<span style="font-weight:bold; font-size:24px;">«Биржа помощи»</span>
+				<span style="font-size:18px;"> - это проект по оказанию помощи в реализации разовых внутренних услуг, 
+				не требующих больших затрат по времени и специфических компетенций для реализации. 
+				Место встречи Заказчиков работ и Исполнителей.</span>
+				<div style="color:white !important; cursor:pointer;position:relative;right:300px;top:50px;" class="btn btn-secondary openD">Подробнее</div>
+				</div>
+
+			</div>
+			
+	</div>
+    <div class="row">
+    <div class="container">
+    		<div class="row">
+    		<div class="col-lg-8" >
+    			<h4>Новые заявки</h4>
+			            <!-- ko foreach: $.model.tasks -->
+
+              
+        
+        <div class="card" style="height:155px;margin-bottom:15px">
+		  <div class="card-header" data-bind="text: $data.title">
+		  </div>
+		  <div class="card-body">
+		    <h5 class="card-title" data-bind="text: $data.theme"></h5>
+		    <div style="display:flex; justify-content:space-between">
+		    <p class="card-text" data-bind="text: $data.HelpExchangeInitiatorUser"></p>
+		    <a data-bind="attr: { href: $data.link }" style="color:white !important" class="btn btn-primary">К заявке</a>
+		     </div>
+		  </div>
+		</div>
+
+        
+        
+            <!-- /ko -->
+
+            <!-- ko if: $.model.tasks().length == 0 -->
+            <h4>Нет предложений</h4>
+            <!-- /ko -->
+            <div style="cursor:pointer" class="btn btn-secondary" onclick="window.location.href='http://portal.pallet.ru/requests/SitePages/allrequests.aspx'">Все заявки</div>
+            </div>
+            
+            <div class="col scrollBlk">
+            <h4>Исполнители</h4>
+            			            <!-- ko foreach: $.model.executors -->
+            
+            <div class="card" style="height:155px;margin-bottom:15px">
+  <div class="card-header" data-bind="text: $data.HEposition" >
+  </div>
+  <div class="card-body">
+    <h5 class="card-title" data-bind="text: $data.HEexecutor"></h5>
+    <div style="display:flex; justify-content:space-between">
+    <p class="card-text" data-bind="text: $data.HEdepartment"></p>
+    <a data-bind="attr: { href: $data.link }" style="color:white !important" class="btn btn-primary">Подробнее</a>
+    </div>
+  </div>
+</div>
+
+            
+
+            <!-- /ko -->
+
+            <!-- ko if: $.model.executors().length == 0 -->
+            <h4>Нет исполнителей</h4>
+            <!-- /ko -->
+    </div>
+		</div>
+    </div>
+  </div>
+</section>
