@@ -1,0 +1,191 @@
+
+
+<script type="text/javascript" src="https://portal.sitronics.com/services/requests/SiteAssets/dist/jquery-3.6.1.js"></script>
+
+<!-- Default V2 theme -->
+<link href="https://portal.sitronics.com/services/requests/SiteAssets/dist/defaultV2.min.css" type="text/css" rel="stylesheet">
+
+<!-- Modern theme -->
+<link href="https://portal.sitronics.com/services/requests/SiteAssets/dist/modern.min.css" type="text/css" rel="stylesheet">
+
+<script type="text/javascript" src="https://portal.sitronics.com/services/requests/SiteAssets/dist/survey.jquery.js"></script>
+<script>
+$(function() {
+Survey.StylesManager.applyTheme("defaultV2");
+
+var surveyJSON = {
+ "title": "Опрос: Болельщики",
+ "logoPosition": "right",
+ "completedHtml": "<h2>Ваша заявка принята</h2>",
+ "pages": [
+  {
+   "name": "page1",
+   "elements": [
+    {
+     "type": "text",
+     "name": "question1",
+     "title": "Мобильный телефон",
+     "isRequired": true
+    },
+    {
+     "type": "text",
+     "name": "question2",
+     "title": "Сколько человек вместе с вами планирует поехать на Спартакиаду в качестве болельщиков?",
+     "description": "Укажите только количество, включая вас самих",
+     "isRequired": true
+    },
+    {
+     "type": "radiogroup",
+     "name": "question3",
+     "title": "Как вы планируете добираться?",
+     "isRequired": true,
+     "choices": [
+      "Самостоятельно, на машине",
+      "На корпоративном автобусе"
+     ]
+    },
+    {
+     "type": "radiogroup",
+     "name": "question4",
+     "title": "Будут ли с вами дети? Если да, укажите в свободном поле возраст ребенка/детей",
+     "isRequired": true,
+     "choices": [
+      "Нет"
+     ],
+     "showOtherItem": true,
+     "otherText": "Да"
+    }
+   ]
+  }
+ ],
+ "completeText": "Отправить"
+};
+
+
+
+
+
+function sendDataToServer(survey) {
+
+
+var result = JSON.stringify(survey.data);
+console.log(survey.data);
+
+var quest4otherCheck='';
+
+    if(survey.data.question4=='other'){
+   quest4otherCheck='Да, '+ ' '+ survey.data['question4-Comment'];
+}else{
+    quest4otherCheck=survey.data.question4
+}
+
+  
+  
+  
+  
+  
+var clientContext = new SP.ClientContext.get_current();
+   var oList = clientContext.get_web().get_lists().getByTitle('Опрос Болельщики 2023');
+       
+   var itemCreateInfo = new SP.ListItemCreationInformation();
+   this.oListItem = oList.addItem(itemCreateInfo);
+       
+
+   oListItem.set_item('Employee',$('.user-info__title-name').text());
+   oListItem.set_item('question1',survey.data.question1);
+   oListItem.set_item('question2',survey.data.question2);
+   oListItem.set_item('question3',survey.data.question3);
+   oListItem.set_item('question4',quest4otherCheck);
+
+
+
+
+       
+   oListItem.update();
+
+   clientContext.load(oListItem);
+       
+   clientContext.executeQueryAsync(Function.createDelegate(this, this.onQuerySucceeded), Function.createDelegate(this, this.onQueryFailed));
+
+
+   function onQuerySucceeded() {
+  console.log('Item created: ' + oListItem.get_id());
+}
+
+function onQueryFailed(sender, args) {
+
+alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+}
+
+
+
+}
+
+    var flag=false;
+        var siteURL = _spPageContextInfo.webAbsoluteUrl;
+        var listname = "Опрос Болельщики 2023";
+        var userId=_spPageContextInfo.userId;
+        var url = siteURL + "/_api/web/lists/getbytitle('" + listname + "')/items?$select=AuthorId&$top=1000";
+        $.ajax({
+        url: url,
+            method: "GET",
+            headers: { "Accept": "application/json; odata=verbose" },
+            async:false,
+            success: function (data) {
+                 for (i=0; i< data.d.results.length; i++) {
+                     if(data.d.results[i].AuthorId==userId){
+                        flag=true;
+                     }
+                 }
+            },
+            error: function (data) {	
+            }
+        });
+        console.log(flag);
+        if(flag){
+         alert('Вы уже зарегистрировались');
+         window.location.href="https://portal.sitronics.com"
+        }else{
+        var survey = new Survey.Model(surveyJSON);
+                        survey.locale = 'ru';
+                        $("#surveyContainer").Survey({
+                        model: survey,
+                        onComplete: sendDataToServer
+                        });
+                     }
+    
+
+
+});
+</script>
+<style>
+.sd-body .sd-body__page {
+width: 1350px;
+}
+#surveyContainer{
+ --primary: #1ab7fa !important;
+ --primary-light: rgba(26, 183, 250, 0.1) !important;
+ --secondary: #1ab7fa !important;
+
+}
+#WebPartTitleWPQ1{
+   display:none;
+}
+.sd-table__cell--header:not(.sd-table__cell--empty) {
+   min-width: 0 !important;
+   width:60px !important;
+}
+.sd-title{
+   font-family: TT Firs Neue,sans-serif !important;
+}
+.sd-root-modern{
+   font-family: TT Firs Neue,sans-serif !important; 
+}
+.sd-body.sd-body--static {
+   max-width: 1400px !important
+   }
+   .wssc__layout {
+   padding: 0 !important;
+}
+</style>
+<div style="width:1400px" id="surveyContainer"></div>
