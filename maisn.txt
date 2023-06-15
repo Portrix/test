@@ -1,0 +1,99 @@
+var KronshtadtSurvey;
+(function (KronshtadtSurvey) {
+    var Pages;
+    (function (Pages) {
+        var Main = /** @class */ (function () {
+            function Main() {
+                this.newItem = null;
+                this.mobileView = ko.observable(false);
+                this.banners = ko.observableArray();
+                this.isVoteItem = null;
+                this.isVoteItemId = 0;
+                this.votedLookupId = ko.observable(0);
+                this.votedLookupValue = ko.observable(0);
+                this.itemValue = null;
+                this.init = this.init.bind(this);
+                this.getBanners = this.getBanners.bind(this);
+                this.alpClick = this.alpClick.bind(this);
+                this.getBannersSuccessCallback = this.getBannersSuccessCallback.bind(this);          
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', this.init);
+            }
+            Main.prototype.init = function () {
+                document.title="Бессмертный полк";
+                $('#favicon').attr("href",'http://portal.kronshtadt.ru/modern/SiteAssets/PortalSettings/favicon.ico');
+                var self = this;
+                SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                   self.getBanners('');
+                   $('.chosenChar').on('click',function(){
+                        if ($('.chosenChar').hasClass('selectedLetter')){
+                            $('.chosenChar').removeClass('selectedLetter');
+                            $(this).addClass('selectedLetter');
+                        } else{
+                            $(this).addClass('selectedLetter');
+                        }
+                      
+
+                     $.model.getBanners($(this).attr('data-value'));
+                   });
+                });
+                
+            };
+            Main.prototype.alpClick = function(){
+              
+
+            }
+
+            Main.prototype.getBanners = function (letter) {
+                console.log('recieved------'+letter);
+                this.banners.removeAll();
+                    var clientContext = new SP.ClientContext("http://portal.kronshtadt.ru/modern");
+                    var oList = clientContext.get_web().get_lists().getByTitle('Бессмертный полк');
+                    var camlQuery = new SP.CamlQuery();
+                    var view='';
+                    if (letter=='' || letter==null || letter =='Все'){
+                        view="<View><Query><OrderBy><FieldRef Name='FileLeafRef' Ascending='True'></FieldRef></OrderBy></Query></View>";
+                    }else{
+                        view="@<View><Query><Where><BeginsWith><FieldRef Name='FileLeafRef' /><Value Type='File'>"+letter+"</Value></BeginsWith></Where></Query> <ViewFields><FieldRef Name='FileRef' /><FieldRef Name='FileLeafRef' /></ViewFields></View>";
+                    }
+                    camlQuery.set_viewXml(view);
+                    this.bannersListItems = oList.getItems(camlQuery);
+                    console.log(this.bannersListItems);
+                    clientContext.load(this.bannersListItems);
+                    clientContext.executeQueryAsync(Function.createDelegate(this, this.getBannersSuccessCallback), Function.createDelegate(this, this.errorCallback));
+            };
+            Main.prototype.getBannersSuccessCallback = function (sender, args) {
+                var listItemEnumerator = this.bannersListItems.getEnumerator();
+                while (listItemEnumerator.moveNext()) {
+                    var oListItem = listItemEnumerator.get_current();
+                    // this.itemValue(oListItem.get_item('Title'));
+                    this.banners.push(new Banner(oListItem));
+                    
+                    
+                }
+                    console.log(this.banners());      
+            };
+
+            
+            Main.prototype.errorCallback = function (sender, args) {
+                alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+            };
+
+
+
+            return Main;
+        }());
+        Pages.Main = Main;
+
+        var Banner = /** @class */ (function () {
+            function Banner(oListItem) {
+                this.id = oListItem.get_id();
+                this.fileRef=oListItem.get_item('FileRef');
+                this.fileName=oListItem.get_item('FileLeafRef');
+                this.Fio=this.fileName.split('.')[0];        
+            }
+            return Banner;
+        }());
+        Pages.Banner = Banner;
+    })(Pages = KronshtadtSurvey.Pages || (KronshtadtSurvey.Pages = {}));
+})(KronshtadtSurvey || (KronshtadtSurvey = {}));
+//# sourceMappingURL=main.js.map
