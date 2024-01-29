@@ -1,0 +1,30 @@
+// function getItems(url) {
+    //   return $.ajax({
+    //     url: _spPageContextInfo.webAbsoluteUrl + url,
+    //     type: "GET",
+    //     headers: {
+    //       "accept": "application/json;odata=verbose",
+    //     }
+    //   });
+    // }
+
+
+
+
+    // getItems("/_api/Web/Lists/GetByTitle('НГ запись')/Items").done(function (data) {
+    //   var numofItems = data.d.results.length;
+    //   console.log(numofItems);
+    //   var free=30;
+    //   var total=0;
+    //   if ((numofItems < 30) || (numofItems == 'undefined') || (numofItems == null)){
+    //       $('#surveyContainer').removeClass('visHid');
+    //       total=free-numofItems;
+    // console.log(total)
+    // $('#space').text(''+total+'');
+         
+
+    //   } else{
+    //     $('#overh2').removeClass('dispNone');
+    //     $('#spaces').attr('style','visibility:hidden')
+    //   }
+    // });
