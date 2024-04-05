@@ -97,3 +97,263 @@ var KronshtadtSurvey;
     })(Pages = KronshtadtSurvey.Pages || (KronshtadtSurvey.Pages = {}));
 })(KronshtadtSurvey || (KronshtadtSurvey = {}));
 //# sourceMappingURL=main.js.map
+<link href="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/bootstrap.css" rel="stylesheet" >
+<script src="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/docxtemplater.js"></script>
+<script src="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/pizzip.js"></script>
+<script src="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/FileSaver.js"></script>
+<script src="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/pizzip-utils.js"></script>
+<script src="http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/jquery.min.js"></script>
+<style>
+    .form-text{
+        color:red !important;
+    }
+    #myForm{
+        display: none;
+        margin-top:20px;
+    }
+    .btn-primary{
+    background-color: rgb(208, 7, 39) !important;
+    border: none !important;
+    }
+    .btn-primary:hover{
+        background-color: rgb(181 15 42) !important;
+    }
+</style>
+<script>
+    $(document).ready(function(){
+       
+        $('#showForm').on('click',function(){
+        $('#myForm').slideDown();
+});
+        $('#print').on('click',function(){
+
+            myFunction();
+            
+        });
+
+    });
+
+
+function loadFile(url,callback){
+    PizZipUtils.getBinaryContent(url,callback);
+}
+
+function myFunction(){
+
+
+            var Employee = $('#Employee').val();
+            var Position = $('#Position').val();
+            var Company = $('#Company').val();
+            var Phoneadd = $('#Phoneadd').val();
+            var Mobile = $('#Mobile').val();
+            var MobileOwn = $('#MobileOwn').val();
+            var Email = $('#Email').val();
+            var Skype = $('#Skype').val();
+            // var Qrcode = $('#Qrcode').val();
+            var Address = $('#Address').val();
+            var Count = $('#Count').val();
+            console.log(Employee);
+if(Employee==""){
+    $('#EmployeeReq').text('Поле обязательно для заполнения');
+    $('#Employee').css('border-color','red');
+} else{
+    $('#EmployeeReq').text('');
+    $('#Employee').css('border-color','#c8c8c8');
+}
+if(Position==""){
+    $('#PositionReq').text('Поле обязательно для заполнения');
+    $('#Position').css('border-color','red');
+} else{
+    $('#PositionReq').text('');
+    $('#Position').css('border-color','#c8c8c8');
+}
+if(Address==""){
+    $('#AddressReq').text('Поле обязательно для заполнения');
+    $('#Address').css('border-color','red');
+} else{
+    $('#AddressReq').text('');
+    $('#Address').css('border-color','#c8c8c8');
+}
+if(Company==null){
+    $('#CompanyReq').text('Поле обязательно для заполнения');
+    $('#Company').css('border-color','red');
+} else{
+    $('#CompanyReq').text('');
+    $('#Company').css('border-color','#c8c8c8');
+}
+if(Phoneadd==""){
+    $('#PhoneaddReq').text('Поле обязательно для заполнения');
+    $('#Phoneadd').css('border-color','red');
+} else{
+    $('#PhoneaddReq').text('');
+    $('#Phoneadd').css('border-color','#c8c8c8');
+}
+if(Mobile==""){
+    $('#MobileReq').text('Поле обязательно для заполнения');
+    $('#Mobile').css('border-color','red');
+} else{
+    $('#MobileReq').text('');
+    $('#Mobile').css('border-color','#c8c8c8');
+}
+if(Email==""){
+    $('#EmailReq').text('Поле обязательно для заполнения');
+    $('#Email').css('border-color','red');
+} else{
+    $('#EmailReq').text('');
+    $('#Email').css('border-color','#c8c8c8');
+}
+// if(Qrcode==null){
+//     $('#QrcodeReq').text('Поле обязательно для заполнения');
+//     $('#Qrcode').css('border-color','red');
+// } else{
+//     $('#QrcodeReq').text('');
+//     $('#Count').css('border-color','#c8c8c8');
+// }
+if(Count==""){
+    $('#CountReq').text('Поле обязательно для заполнения');
+    $('#Count').css('border-color','red');
+} else{
+    $('#CountReq').text('');
+    $('#Count').css('border-color','#c8c8c8');
+}
+if(Employee !='' && Position !=''&& Company !=null && Phoneadd != '' && Mobile != '' && Email !='' && Count !='' && Address != ''){
+    generate(Employee,Position,Company,Phoneadd,Mobile,MobileOwn,Email,Skype,Address,Count);
+    alert('Распечатайте скачанное заявление и подпишите у руководителя');
+    window.location.reload();
+}else{
+    console.log('Fill the required fields');
+}
+         
+
+}
+
+
+
+function generate(rEmployee,rPosition,rCompany,rPhoneadd,rMobile,rMobileOwn,rEmail,rSkype,rAddress,rCount) {
+
+    loadFile("http://portal.kronshtadt.ru/modern/Services/SiteAssets/businesscard/templ/template.docx",function(error,content){
+        if (error) { throw error };
+        var zip = new PizZip(content);
+        var doc=new window.docxtemplater().loadZip(zip);
+        
+
+        doc.setData({
+            Employee:rEmployee,
+            Position:rPosition,
+            Company:rCompany,
+            Phoneadd:rPhoneadd,
+            Mobile:rMobile,
+            MobileOwn: rMobileOwn,
+            Email: rEmail,
+            Skype: rSkype,
+            Address: rAddress,
+            Count: rCount
+        });
+        try {
+            // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
+            doc.render()
+        }
+        catch (error) {
+            // The error thrown here contains additional information when logged with JSON.stringify (it contains a properties object containing all suberrors).
+            function replaceErrors(key, value) {
+                if (value instanceof Error) {
+                    return Object.getOwnPropertyNames(value).reduce(function(error, key) {
+                        error[key] = value[key];
+                        return error;
+                    }, {});
+                }
+                return value;
+            }
+            console.log(JSON.stringify({error: error}, replaceErrors));
+
+            if (error.properties && error.properties.errors instanceof Array) {
+                const errorMessages = error.properties.errors.map(function (error) {
+                    return error.properties.explanation;
+                }).join("\n");
+                console.log('errorMessages', errorMessages);
+                // errorMessages is a humanly readable message looking like this :
+                // 'The tag beginning with "foobar" is unopened'
+            }
+            throw error;
+        }
+        var out=doc.getZip().generate({
+            type:"blob",
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }) //Output the document using Data-URI
+        saveAs(out,"Заявление.docx")
+    })
+}
+</script>
+<button id="showForm" class="btn btn-primary">Заполнить форму</button>
+<div id="myForm">
+  <div class="mb-3">
+    <label for="Employee" class="form-label">ФИО</label>
+    <input type="text" class="form-control" id="Employee" aria-describedby="emailHelp" required>
+    <div id="EmployeeReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Position" class="form-label">Должность</label>
+    <input type="text" class="form-control" id="Position">
+    <div id="PositionReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Company" class="form-label">Компания</label>
+   <select class="form-select" id="Company" required>
+    <option selected disabled value="">Выбрать</option>
+    <option value="АО «Кронштадт»">АО «Кронштадт»</option>
+    <option value="АО «КТ-Беспилотные системы»">АО «КТ-Беспилотные системы»</option>
+    <option value="ООО «Интеллектуальные Технические Решения»">ООО «Интеллектуальные Технические Решения»</option>
+    <option value="ООО «Кронштадт БС-ПРО»">ООО «Кронштадт БС-ПРО»</option>
+    <option value="АО «КТ-Беспилотные системы» в г. Москва">АО «КТ-Беспилотные системы» в г. Москва</option>
+
+    </select>
+    <div id="CompanyReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Address" class="form-label">Адрес</label>
+    <input type="text" class="form-control" id="Address">
+    <div id="AddressReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Phoneadd" class="form-label">Добавочный внутренний номер</label>
+    <input type="text" class="form-control" id="Phoneadd">
+    <div id="PhoneaddReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Mobile" class="form-label">Мобильный корпоративный номер телефона</label>
+    <input type="text" class="form-control" id="Mobile">
+    <div id="MobileReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="MobileOwn" class="form-label">Мобильный личный номер телефона (по желанию)</label>
+    <input type="text" class="form-control" id="MobileOwn">
+  
+  </div>
+  <div class="mb-3">
+    <label for="Email" class="form-label">Электронная корпоративная почта</label>
+    <input type="email" class="form-control" id="Email">
+    <div id="EmailReq" class="form-text"></div>
+  </div>
+  <div class="mb-3">
+    <label for="Skype" class="form-label">Skype (по желанию)</label>
+    <input type="text" class="form-control" id="Skype">
+  </div>
+  <!-- <div class="mb-3">
+    <label for="Qrcode" class="form-label">QR – код (по желанию, генерируется инициатором )</label>
+   <select class="form-select" id="Qrcode" required>
+    <option selected disabled value="">Выбрать</option>
+    <option value="Да">Да</option>
+    <option value="Нет">Нет</option>
+    </select>
+    <div id="QrcodeReq" class="form-text"></div>
+  </div> -->
+  <div class="mb-3">
+    <label for="Count" class="form-label">Количество, штук (кратно 50)</label>
+    <input type="number" class="form-control" id="Count">
+    <div id="CountReq" class="form-text"></div>
+  </div>
+  <button id="print" class="btn btn-primary">Скачать</button>
+</div>
+
+
+
